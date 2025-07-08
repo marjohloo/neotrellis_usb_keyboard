@@ -59,8 +59,6 @@ from adafruit_hid.keycode import Keycode
 
 # When true keycodes are sent
 KC_LIVE = True
-# When true keycodes are sent over BLE
-BLE_LIVE = True
 
 # LED Hues
 HUE_SPLIT = (1.0/24.0)
@@ -91,6 +89,16 @@ hue = {
     "mrr"     : (HUE_SPLIT * 23.0),
 }
 
+# LED Values (brightness)
+VAL_SPLIT = (1.0/32.0)
+VAL_MIN   = (VAL_SPLIT *  0.0)
+VAL_OFF   = (VAL_SPLIT *  2.0)
+VAL_ON    = (VAL_SPLIT * 30.0)
+VAL_MAX   = (VAL_SPLIT * 32.0)
+VAL_STEP  = 0.00005
+
+# Key configuration data
+#
 # Hue:
 #   Set this for the pad color.
 #
@@ -129,55 +137,30 @@ config = [
     {"hue": hue["cyan"],    "group": None,    "keycodes_on": [Keycode.ALT,   Keycode.RIGHT_ARROW], "keycodes_off": None                          }, # E - Chrome Forward
     {"hue": hue["green"],   "group": None   , "keycodes_on": [Keycode.ALT,   Keycode.F14],         "keycodes_off": [Keycode.CONTROL, Keycode.F14]}  # F - Virtual Camera Start/Stop
 ]
-# Second config
-#config = [
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F13],                  "keycodes_off": None                        }, # 0
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F14],                  "keycodes_off": None                        }, # 1
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F15],                  "keycodes_off": None                        }, # 2
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F16],                  "keycodes_off": None                        }, # 3
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F17],                  "keycodes_off": None                        }, # 4
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F18],                  "keycodes_off": None                        }, # 5
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F19],                  "keycodes_off": None                        }, # 6
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F20],                  "keycodes_off": None                        }, # 7
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F21],                  "keycodes_off": None                        }, # 8
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F22],                  "keycodes_off": None                        }, # 9
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F23],                  "keycodes_off": None                        }, # A
-#    {"hue": hue["magenta"], "group": "scene", "keycodes_on": [Keycode.F24],                  "keycodes_off": None                        }, # B
-#    {"hue": hue["cyan"]   , "group": None,    "keycodes_on": [Keycode.SHIFT,   Keycode.F13], "keycodes_off": [Keycode.SHIFT, Keycode.F13]}, # C
-#    {"hue": hue["cyan"]   , "group": None,    "keycodes_on": [Keycode.SHIFT,   Keycode.F14], "keycodes_off": [Keycode.SHIFT, Keycode.F14]}, # D
-#    {"hue": hue["green"]  , "group": None,    "keycodes_on": [Keycode.CONTROL, Keycode.F13], "keycodes_off": [Keycode.ALT,   Keycode.F13]}, # E
-#    {"hue": hue["red"]    , "group": None   , "keycodes_on": [Keycode.CONTROL, Keycode.F14], "keycodes_off": [Keycode.ALT,   Keycode.F14]}  # F
-#]
 
-# Original config
-#config = [
-#    {"hue": hue["yg"]     , "group": "scene", "keycodes_on": [Keycode.F13],                  "keycodes_off": None                      }, # 0
-#    {"hue": hue["yellow"] , "group": "scene", "keycodes_on": [Keycode.F14],                  "keycodes_off": None                      }, # 1
-#    {"hue": hue["yg"]     , "group": "scene", "keycodes_on": [Keycode.F15],                  "keycodes_off": None                      }, # 2
-#    {"hue": hue["red"]    , "group": None   , "keycodes_on": [Keycode.CONTROL, Keycode.F13], "keycodes_off": [Keycode.ALT, Keycode.F13]}, # 3
-#    {"hue": hue["gc"]     , "group": "scene", "keycodes_on": [Keycode.F16],                  "keycodes_off": None                      }, # 4
-#    {"hue": hue["green"]  , "group": "scene", "keycodes_on": [Keycode.F17],                  "keycodes_off": None                      }, # 5
-#    {"hue": hue["gc"]     , "group": "scene", "keycodes_on": [Keycode.F18],                  "keycodes_off": None                      }, # 6
-#    {"hue": hue["rry"]    , "group": None   , "keycodes_on": [Keycode.CONTROL, Keycode.F14], "keycodes_off": [Keycode.ALT, Keycode.F14]}, # 7
-#    {"hue": hue["cb"]     , "group": "scene", "keycodes_on": [Keycode.F19],                  "keycodes_off": None                      }, # 8
-#    {"hue": hue["cyan"]   , "group": "scene", "keycodes_on": [Keycode.F20],                  "keycodes_off": None                      }, # 9
-#    {"hue": hue["cb"]     , "group": "scene", "keycodes_on": [Keycode.F21],                  "keycodes_off": None                      }, # A
-#    {"hue": hue["ry"]     , "group": None,    "keycodes_on": [Keycode.SHIFT, Keycode.F13]  , "keycodes_off": None                      }, # B
-#    {"hue": hue["bm"]     , "group": "scene", "keycodes_on": [Keycode.F22],                  "keycodes_off": None                      }, # C
-#    {"hue": hue["blue"]   , "group": "scene", "keycodes_on": [Keycode.F23],                  "keycodes_off": None                      }, # D
-#    {"hue": hue["bm"]     , "group": "scene", "keycodes_on": [Keycode.F24],                  "keycodes_off": None                      }, # E
-#    {"hue": hue["ryy"]    , "group": None   , "keycodes_on": [Keycode.CONTROL, Keycode.F16], "keycodes_off": [Keycode.ALT, Keycode.F16]}  # F
-#]
+# Presses a list of keycodes
+def press_keycodes(kcs):
+    print(f'press_keycodes({kcs}), KC_LIVE={KC_LIVE}, ble.connected={ble.connected}')
+    if KC_LIVE and ble.connected:
+        if len(kcs) == 1:
+            keyboard.press(kcs[0])
+        elif len(kcs) == 2:
+            keyboard.press(kcs[0], kcs[1])
+        elif len(kcs) == 3:
+            keyboard.press(kcs[0], kcs[1], kcs[2])
 
-# LED Values (brightness)
-VAL_SPLIT = (1.0/32.0)
-VAL_MIN   = (VAL_SPLIT *  0.0)
-VAL_OFF   = (VAL_SPLIT *  2.0)
-VAL_ON    = (VAL_SPLIT * 30.0)
-VAL_MAX   = (VAL_SPLIT * 32.0)
-VAL_STEP  = 0.01
+# Releases a list of keycodes
+def release_keycodes(kcs):
+    print(f'release_keycodes({kcs}), KC_LIVE={KC_LIVE}, ble.connected={ble.connected}')
+    if KC_LIVE and ble.connected:
+        if len(kcs) == 1:
+            keyboard.release(kcs[0])
+        elif len(kcs) == 2:
+            keyboard.release(kcs[0], kcs[1])
+        elif len(kcs) == 3:
+            keyboard.release(kcs[0], kcs[1], kcs[2])
 
-# this will be called when button events are received
+# Keypad event callback
 def key_event(event):
     # key pressed when a rising edge is detected
     if event.edge == NeoTrellis.EDGE_RISING:
@@ -244,55 +227,13 @@ def key_event(event):
             # Release on keycodes
             release_keycodes(config[event.number]["keycodes_on"])
 
-# Presses a list of keycodes
-def press_keycodes(kcs):
-    send = "Disabled"
-    if KC_LIVE:
-        if BLE_LIVE:
-            if ble.connected:
-                send = "BLE"
-            else:
-                send = "BLE disconnected"
-        else:
-            send = "USB"
-    print(f'keycode press {kcs} {send}')
-    if send == "BLE" or send == "USB":
-        if len(kcs) == 1:
-            keyboard.press(kcs[0])
-        elif len(kcs) == 2:
-            keyboard.press(kcs[0], kcs[1])
-        elif len(kcs) == 3:
-            keyboard.press(kcs[0], kcs[1], kcs[2])
-
-# Releases a list of keycodes
-def release_keycodes(kcs):
-    send = "Disabled"
-    if KC_LIVE:
-        if BLE_LIVE:
-            if ble.connected:
-                send = "BLE"
-            else:
-                send = "BLE disconnected"
-        else:
-            send = "USB"
-    print(f'keycode release {kcs} {send}')
-    if send == "BLE" or send == "USB":
-        if len(kcs) == 1:
-            keyboard.release(kcs[0])
-        elif len(kcs) == 2:
-            keyboard.release(kcs[0], kcs[1])
-        elif len(kcs) == 3:
-            keyboard.release(kcs[0], kcs[1], kcs[2])
-
+# Convert HSV to RGB
 def hsv_to_rgb(h, s, v):
     # Convert an HSV (0.0-1.0) colour to RGB (0-255)
     if s == 0.0:
         rgb = [v, v, v]
-
     i = int(h * 6.0)
-
     f = (h*6.)-i; p,q,t = v*(1.-s), v*(1.-s*f), v*(1.-s*(1.-f)); i%=6
-
     if i == 0:
         rgb = [v, t, p]
     if i == 1:
@@ -305,154 +246,245 @@ def hsv_to_rgb(h, s, v):
         rgb = [t, p, v]
     if i == 5:
         rgb = [v, p, q]
-
     rgb = tuple(int(c * 255) for c in rgb)
-
     return rgb
 
-# Set up neotrellis
+# BLE disonnected pixel loops
+ble_not_advertising_pixels = [5, 6, 9, 10] # Inner 4
+ble_advertising_pixels = [0, 1, 2, 3, 7, 11, 15, 14, 13, 12, 8, 4] # Outer 12
+ble_advertising_pixel_index = 0
+
+# Set up I2C for neotrellis
 i2c_bus = board.I2C()  # uses board.SCL and board.SDA
-# i2c_bus = board.STEMMA_I2C()  # For using the built-in STEMMA QT connector on a microcontroller
+# Set up neotrellis
 trellis = NeoTrellis(i2c_bus)
-trellis.brightness = 0.5
+trellis.brightness = 1.0
+# Set not advertising pixels to dim red
+r, g, b = hsv_to_rgb(hue["red"], 1.0, VAL_OFF)
+for i in range(len(ble_not_advertising_pixels)):
+    trellis.pixels[ble_not_advertising_pixels[i]] = (r, g, b)
+
+# Setup the BLE keyboard and layout
+ble_connected = None
+hid = HIDService()
+device_info = DeviceInfoService(
+    manufacturer="Adafruit",
+    software_revision=adafruit_ble.__version__,
+    model_number="NeoTrellis nRF52840",
+    serial_number="20250704",
+    firmware_revision="0.0.5",
+    hardware_revision="0.0.1")
+advertisement = ProvideServicesAdvertisement(hid)
+# Advertise as "Keyboard" (0x03C1) icon when pairing
+# https://www.bluetooth.com/specifications/assigned-numbers/
+advertisement.appearance = 961
+scan_response = Advertisement()
+scan_response.shortname = "NeoTrellis"
+scan_response.complete_name = "NeoTrellis"
+ble = adafruit_ble.BLERadio()
+keyboard = Keyboard(hid.devices)
+layout = KeyboardLayoutUS(keyboard)
 
 # Add runtime data to config
-for i in range(16):
-    trellis.pixels[i] = (0x00, 0x00, 0x7F)
-    # activate rising edge events on key
-    trellis.activate_key(i, NeoTrellis.EDGE_RISING)
-    # activate falling edge events on all key
-    trellis.activate_key(i, NeoTrellis.EDGE_FALLING)
-    # set all keys to trigger the callback
-    trellis.callbacks[i] = key_event
+for p in range(16):
     # Defaults
-    # Mode is toggle
-    config[i]["mode"] = None
+    # Mode is none
+    config[p]["mode"] = None
     # Set LED value to max
-    config[i]["val"] = VAL_MAX
+    config[p]["val"] = VAL_MAX
     # Not down
-    config[i]["down"] = False
+    config[p]["down"] = False
     # Not on
-    config[i]["on"] = False
+    config[p]["on"] = False
     # This is a toggle pad ?
-    if config[i]["keycodes_off"] != None and len(config[i]["keycodes_off"]) and len(config[i]["keycodes_on"]):
+    if config[p]["keycodes_off"] != None and config[p]["keycodes_on"] != None and len(config[p]["keycodes_off"]) and len(config[p]["keycodes_on"]):
         # Mode is toggle
-        config[i]["mode"] = "toggle"
+        config[p]["mode"] = "toggle"
         # Can't be in a group
-        config[i]["group"] = None
+        config[p]["group"] = None
     # This is a grouped pad ?
-    if config[i]["group"] != None and len(config[i]["keycodes_on"]):
+    if config[p]["group"] != None and len(config[p]["keycodes_on"]):
         # Mode is group
-        config[i]["mode"] = "group"
+        config[p]["mode"] = "group"
     # This is a key pad ?
-    if config[i]["mode"] == None and len(config[i]["keycodes_on"]):
+    if config[p]["mode"] == None and len(config[p]["keycodes_on"]):
         # Mode is key
-        config[i]["mode"] = "key"
+        config[p]["mode"] = "key"
     # This key has not got a mode ?
-    if config[i]["mode"] == None:
+    if config[p]["mode"] == None:
         # Set LED value to min (not lit)
-        config[i]["val"] = VAL_MIN
+        config[p]["val"] = VAL_MIN
+    print(f'key={p}, mode={config[p]["mode"]}')
 
-if not BLE_LIVE:
-    # Set up the USB keyboard and layout
-    keyboard = Keyboard(usb_hid.devices)
-    layout = KeyboardLayoutUS(keyboard)
-
-else:
-    # Setup the BLE keyboard and layout
-    hid = HIDService()
-    device_info = DeviceInfoService(software_revision=adafruit_ble.__version__,
-                                    manufacturer="marjohloo")
-    advertisement = ProvideServicesAdvertisement(hid)
-    # Advertise as "Keyboard" (0x03C1) icon when pairing
-    # https://www.bluetooth.com/specifications/assigned-numbers/
-    advertisement.appearance = 961
-    scan_response = Advertisement()
-    scan_response.complete_name = "Neotrellis BLE Keyboard"
-    ble = adafruit_ble.BLERadio()
-    if not ble.connected:
-        print("BLE intialise advertising")
-        ble.start_advertising(advertisement, scan_response)
-    else:
-        print("BLE initialise already connected")
-        print(ble.connections)
-    keyboard = Keyboard(hid.devices)
-    layout = KeyboardLayoutUS(keyboard)
+# Setup Neotrellis key callbacks
+for p in range(16):
+    # activate rising edge events on key
+    trellis.activate_key(p, NeoTrellis.EDGE_RISING)
+    # activate falling edge events on all key
+    trellis.activate_key(p, NeoTrellis.EDGE_FALLING)
+    # set all keys to trigger the callback
+    trellis.callbacks[p] = key_event
 
 # Main loop
 while True:
+
+    # Connection debugging
+    if ble_connected != ble.connected:
+        ble_connected = ble.connected
+        print(f'ble.connected = {ble.connected}')
+
+    # BLE is connected? Update advertising
+    if ble.connected:
+        # BLE is advertising ?
+        if ble.advertising:
+            print('ble.stop_advertising()')
+            ble.stop_advertising()
+    # BLE is not connected ? Update advertising
+    else:
+        # BLE is advertising ?
+        if ble.advertising:
+            pass
+        # BLE not advertising ?
+        else:
+            # Start advertising ?
+            print('ble.start_advertising()')
+            print(f'  advertisement.short_name = {advertisement.short_name}, .complete_name = {advertisement.complete_name}')
+            print(f'  scan_response.short_name = {scan_response.short_name}, .complete_name = {scan_response.complete_name}')
+            ble.start_advertising(advertisement, scan_response)
+
     # call the sync function call any triggered callbacks
     trellis.sync()
     # the trellis can only be read every 17 millisecons or so
     time.sleep(0.02)
-    # Loop through pads
-    for i in range(16):
-        # Start with LED off
-        h = 0.0
-        s = 0.0
-        v = 0.0
-        # No mode ?
-        if config[i]["mode"] == None:
-            # Turn off LED
-            trellis.pixels[i] = (0, 0, 0)
-        # Pad has a mode ?
-        else:
-            # Pad is down ?
-            if config[i]["down"]:
-                # Normal or grouped pad
-                if config[i]["mode"] == "key" or config[i]["mode"] == "group":
-                    # Go to full brightness
-                    config[i]["val"] = v = VAL_MAX
-                # Toggle pad?
-                elif config[i]["mode"] == "toggle":
-                    # Toggled on ?
-                    if config[i]["on"]:
-                        # Go to full brightness
-                        config[i]["val"] = v = VAL_MAX
-                    # Toggled off ?
-                    else:
-                        # Go to min brightness
-                        config[i]["val"] = v = VAL_MIN
-            # Pad is not down
-            else:
-                # Pad is on
-                if config[i]["on"]:
-                    # Set target on brightness
-                    v = VAL_ON
-                # Pad is off ?
-                else:
-                    # Set target off brightness
-                    v = VAL_OFF
-            # Target value above current value ?
-            if v > config[i]["val"]:
-                # Move towards target
-                if v - config[i]["val"] > VAL_STEP:
-                    config[i]["val"] += VAL_STEP
-                else:
-                    config[i]["val"] = v
-            # Target value below current value
-            elif v < config[i]["val"]:
-                # Move towards target
-                if config[i]["val"] - v > VAL_STEP:
-                    config[i]["val"] -= VAL_STEP
-                else:
-                    config[i]["val"] = v
-            # Pad has a hue ?
-            if config[i]["hue"] is not None:
-                # Set full saturation
-                s = 1.0
-                # Set hue
-                h = config[i]["hue"]
-            else:
-                s = 0.0
-                h = 0.0
-            # Convert the hue to RGB values.
-            r, g, b = hsv_to_rgb(h, s, config[i]["val"])
-            # Finally set the LED
-            trellis.pixels[i] = (r, g, b)
 
-    if BLE_LIVE:
-        if not ble.connected:
-            if not ble.advertising:
-                print("BLE reconnect advertising")
-                ble.start_advertising(advertisement, scan_response)
+    # BLE connected? Update Neotrellis LEDs
+    if ble.connected:
+        # Normal operation
+        if True:
+            # Loop through pads
+            for p in range(16):
+                # Start with LED off
+                h = 0.0
+                s = 0.0
+                v = 0.0
+                # No mode ?
+                if config[p]["mode"] == None:
+                    # Turn off LED
+                    trellis.pixels[i] = (0, 0, 0)
+                # Pad has a mode ?
+                else:
+                    # Pad is down ?
+                    if config[p]["down"]:
+                        print(f'key {p} is down, mode is {config[p]["mode"]}, on is {config[p]["on"]}')
+                        # Normal or grouped pad
+                        if config[p]["mode"] == "key" or config[p]["mode"] == "group":
+                            # Go to full brightness
+                            config[p]["val"] = v = VAL_MAX
+                        # Toggle pad?
+                        elif config[p]["mode"] == "toggle":
+                            print("toggle down")
+                            # Toggled on ?
+                            if config[p]["on"]:
+                                # Go to full brightness
+                                config[p]["val"] = v = VAL_MAX
+                                print("toggle down max")
+                            # Toggled off ?
+                            else:
+                                # Go to min brightness
+                                config[p]["val"] = v = VAL_MIN
+                                print("toggle down min")
+                    # Pad is not down
+                    else:
+                        # Pad is on
+                        if config[p]["on"]:
+                            # Set target on brightness
+                            v = VAL_ON
+                        # Pad is off ?
+                        else:
+                            # Set target off brightness
+                            v = VAL_OFF
+                    # Step by eighths
+                    if True:
+                        # Target value above current value ?
+                        if v > config[p]["val"]:
+                            step = (v - config[p]["val"]) / 16
+                            # Move towards target
+                            if step > VAL_STEP:
+                                config[p]["val"] += step
+                            else:
+                                config[p]["val"] = v
+                        # Target value below current value
+                        elif v < config[p]["val"]:
+                            step = (config[p]["val"] - v) / 16
+                            # Move towards target
+                            if step > VAL_STEP:
+                                config[p]["val"] -= step
+                            else:
+                                config[p]["val"] = v
+                    # Step by fixed amount
+                    else:
+                        # Target value above current value ?
+                        if v > config[p]["val"]:
+                            # Move towards target
+                            if v - config[p]["val"] > VAL_STEP:
+                                config[p]["val"] += VAL_STEP
+                            else:
+                                config[p]["val"] = v
+                        # Target value below current value
+                        elif v < config[p]["val"]:
+                            # Move towards target
+                            if config[p]["val"] - v > VAL_STEP:
+                                config[p]["val"] -= VAL_STEP
+                            else:
+                                config[p]["val"] = v
+                    # Pad has a hue ?
+                    if config[p]["hue"] is not None:
+                        # Set full saturation
+                        s = 1.0
+                        # Set hue
+                        h = config[p]["hue"]
+                    else:
+                        s = 0.0
+                        h = 0.0
+                    # Convert the hue to RGB values.
+                    r, g, b = hsv_to_rgb(h, s, config[p]["val"])
+                    # Finally set the LED
+                    trellis.pixels[p] = (r, g, b)
+        # Test operation
+        else:
+            # Cycle BLE advertising pixels dim red
+            if ble_advertising_pixel_index >= len(ble_advertising_pixels):
+                ble_advertising_pixel_index = 0
+            r, g, b = hsv_to_rgb(hue["red"], 1.0, VAL_OFF)
+            for p in range(16):
+                if p == ble_advertising_pixels[ble_advertising_pixel_index]:
+                    trellis.pixels[p] = (r, g, b)
+                else:
+                    trellis.pixels[p] = (0, 0, 0)
+            ble_advertising_pixel_index += 1
+    # BLE not connected? Update Neotrellis LEDs
+    else:
+        # Advertising
+        if ble.advertising:
+            # Cycle BLE advertising pixels
+            if ble_advertising_pixel_index >= len(ble_advertising_pixels):
+                ble_advertising_pixel_index = 0
+            r, g, b = hsv_to_rgb(hue["blue"], 1.0, VAL_OFF)
+            for p in range(16):
+                if p == ble_advertising_pixels[ble_advertising_pixel_index]:
+                    trellis.pixels[p] = (r, g, b)
+                else:
+                    trellis.pixels[p] = (0, 0, 0)
+            ble_advertising_pixel_index += 1
+        # Not advertising
+        else:
+            # Cycle BLE not advertising pixels
+            if ble_advertising_pixel_index >= len(ble_not_advertising_pixels):
+                ble_advertising_pixel_index = 0
+            r, g, b = hsv_to_rgb(hue["blue"], 1.0, VAL_OFF)
+            for p in range(16):
+                if p == ble_not_advertising_pixels[ble_advertising_pixel_index]:
+                    trellis.pixels[p] = (r, g, b)
+                else:
+                    trellis.pixels[p] = (0, 0, 0)
+            ble_advertising_pixel_index += 1
