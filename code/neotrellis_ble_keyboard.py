@@ -43,9 +43,12 @@ import math
 import time
 import board
 import usb_hid
+from analogio import AnalogIn
 
 # Libraries (bundle)
-from adafruit_neotrellis.neotrellis import NeoTrellis
+from adafruit_neotrellis.neotrellis import NeoTrellis # requires adafruit_seesaw/
+
+import neopixel # requires adafruit_pixelbuf.mpy
 
 import adafruit_ble
 from adafruit_ble.advertising import Advertisement
@@ -96,6 +99,13 @@ VAL_OFF   = (VAL_SPLIT *  2.0)
 VAL_ON    = (VAL_SPLIT * 30.0)
 VAL_MAX   = (VAL_SPLIT * 32.0)
 VAL_STEP  = 0.00005
+
+# Voltage colors
+VOLTAGE_RED     = 3.2
+VOLTAGE_GREEN   = 4.2
+
+# Battery settings
+VOLTAGE_PERIOD = 10.0 # in seconds
 
 # Key configuration data
 #
@@ -249,6 +259,46 @@ def hsv_to_rgb(h, s, v):
     rgb = tuple(int(c * 255) for c in rgb)
     return rgb
 
+def linear_scale(source_value, source_min, source_max, target_min, target_max):
+    """
+    Linearly scale a value from one range to another.
+
+    Args:
+        source_value (float): The value to be scaled.
+        source_min (float): The minimum value of the source range.
+        source_max (float): The maximum value of the source range.
+        target_min (float): The minimum value of the target range.
+        target_max (float): The maximum value of the target range.
+
+    Returns:
+        float: The scaled value in the target range.
+    """
+    return (source_value - source_min) * (target_max - target_min) / (source_max - source_min) + target_min
+
+def get_voltage():
+    # Get pin value
+    value = voltage_pin.value
+    # Calculate voltage
+    voltage = (value * 3.3) / 65536 * 2
+    # Calculate voltage hue and percentage
+    if voltage <= VOLTAGE_RED:
+        voltage_hue = hue["red"]
+        voltage_percent = 0
+    elif voltage <= VOLTAGE_GREEN:
+        voltage_hue = linear_scale(voltage, VOLTAGE_RED, VOLTAGE_GREEN, hue["red"], hue["green"])
+        voltage_percent = int(linear_scale(voltage, VOLTAGE_RED, VOLTAGE_GREEN, 0, 100))
+    else:
+         voltage_hue = hue["green"]
+         voltage_percent = 100
+    # Convert the hue to RGB values.
+    r, g, b = hsv_to_rgb(voltage_hue, 1.0, 1.0)
+    # Finally set the LED
+    neopixel[0] = (r, g, b)
+    # Calculate coltage percentage
+    print(f'value={value}, voltage={voltage}, voltage_percent={voltage_percent}, voltage_hue={voltage_hue}')
+    # Set timer
+    return time.monotonic() + VOLTAGE_PERIOD
+
 # BLE disonnected pixel loops
 ble_not_advertising_pixels = [5, 6, 9, 10] # Inner 4
 ble_advertising_pixels = [0, 1, 2, 3, 7, 11, 15, 14, 13, 12, 8, 4] # Outer 12
@@ -259,14 +309,28 @@ i2c_bus = board.I2C()  # uses board.SCL and board.SDA
 # Set up neotrellis
 trellis = NeoTrellis(i2c_bus)
 trellis.brightness = 1.0
-# Set not advertising pixels to dim red
+# Turn on start up pixel
 r, g, b = hsv_to_rgb(hue["red"], 1.0, VAL_OFF)
-for i in range(len(ble_not_advertising_pixels)):
-    trellis.pixels[ble_not_advertising_pixels[i]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[0]] = (r, g, b)
+time.sleep(0.05)
+
+# Setup on-board neopixel
+neopixel = neopixel.NeoPixel(board.NEOPIXEL, 1, brightness=(VAL_OFF/2), auto_write=True)
+neopixel[0] = (255, 255, 255)
+trellis.pixels[ble_advertising_pixels[1]] = (r, g, b)
+time.sleep(0.05)
+
+# Initial battery measurement
+voltage_pin = AnalogIn(board.VOLTAGE_MONITOR)
+voltage_timer = get_voltage()
+trellis.pixels[ble_advertising_pixels[2]] = (r, g, b)
+time.sleep(0.05)
 
 # Setup the BLE keyboard and layout
 ble_connected = None
 hid = HIDService()
+trellis.pixels[ble_advertising_pixels[3]] = (r, g, b)
+time.sleep(0.05)
 device_info = DeviceInfoService(
     manufacturer="Adafruit",
     software_revision=adafruit_ble.__version__,
@@ -274,16 +338,31 @@ device_info = DeviceInfoService(
     serial_number="20250704",
     firmware_revision="0.0.5",
     hardware_revision="0.0.1")
+trellis.pixels[ble_advertising_pixels[4]] = (r, g, b)
+time.sleep(0.05)
 advertisement = ProvideServicesAdvertisement(hid)
 # Advertise as "Keyboard" (0x03C1) icon when pairing
 # https://www.bluetooth.com/specifications/assigned-numbers/
 advertisement.appearance = 961
+trellis.pixels[ble_advertising_pixels[5]] = (r, g, b)
+time.sleep(0.05)
 scan_response = Advertisement()
-scan_response.shortname = "NeoTrellis"
-scan_response.complete_name = "NeoTrellis"
+scan_response.shortname = "NeoTrellisSN"
+scan_response.complete_name = "NeoTrellisCN"
+trellis.pixels[ble_advertising_pixels[6]] = (r, g, b)
+time.sleep(0.05)
 ble = adafruit_ble.BLERadio()
+print(f'init: ble.connected={ble.connected}, ble.advertising={ble.advertising}')
+ble.stop_advertising()
+ble.name = "NeoTrellisN"
+trellis.pixels[ble_advertising_pixels[7]] = (r, g, b)
+time.sleep(0.05)
 keyboard = Keyboard(hid.devices)
+trellis.pixels[ble_advertising_pixels[8]] = (r, g, b)
+time.sleep(0.05)
 layout = KeyboardLayoutUS(keyboard)
+trellis.pixels[ble_advertising_pixels[9]] = (r, g, b)
+time.sleep(0.05)
 
 # Add runtime data to config
 for p in range(16):
@@ -315,6 +394,8 @@ for p in range(16):
         # Set LED value to min (not lit)
         config[p]["val"] = VAL_MIN
     print(f'key={p}, mode={config[p]["mode"]}')
+trellis.pixels[ble_advertising_pixels[10]] = (r, g, b)
+time.sleep(0.05)
 
 # Setup Neotrellis key callbacks
 for p in range(16):
@@ -324,20 +405,28 @@ for p in range(16):
     trellis.activate_key(p, NeoTrellis.EDGE_FALLING)
     # set all keys to trigger the callback
     trellis.callbacks[p] = key_event
+trellis.pixels[ble_advertising_pixels[11]] = (r, g, b)
+time.sleep(0.05)
 
 # Main loop
 while True:
 
+    # Time to measure battery ?
+    now = time.monotonic()
+    if now >= voltage_timer:
+        voltage_timer = get_voltage()
+        print(f'timer: ble.connected={ble.connected}, ble.advertising={ble.advertising}')
+
     # Connection debugging
     if ble_connected != ble.connected:
         ble_connected = ble.connected
-        print(f'ble.connected = {ble.connected}')
+        print(f'conchange: ble.connected={ble.connected}, ble.advertising={ble.advertising}')
 
     # BLE is connected? Update advertising
     if ble.connected:
         # BLE is advertising ?
         if ble.advertising:
-            print('ble.stop_advertising()')
+            print(f'ble.stop_advertising()')
             ble.stop_advertising()
     # BLE is not connected ? Update advertising
     else:
@@ -347,9 +436,7 @@ while True:
         # BLE not advertising ?
         else:
             # Start advertising ?
-            print('ble.start_advertising()')
-            print(f'  advertisement.short_name = {advertisement.short_name}, .complete_name = {advertisement.complete_name}')
-            print(f'  scan_response.short_name = {scan_response.short_name}, .complete_name = {scan_response.complete_name}')
+            print(f'ble.start_advertising()')
             ble.start_advertising(advertisement, scan_response)
 
     # call the sync function call any triggered callbacks
@@ -488,3 +575,4 @@ while True:
                 else:
                     trellis.pixels[p] = (0, 0, 0)
             ble_advertising_pixel_index += 1
+
