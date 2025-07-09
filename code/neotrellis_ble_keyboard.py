@@ -42,8 +42,11 @@
 import math
 import time
 import board
+import microcontroller
 import usb_hid
+#import nvm
 from analogio import AnalogIn
+from digitalio import DigitalInOut, Direction, Pull
 
 # Libraries (bundle)
 from adafruit_neotrellis.neotrellis import NeoTrellis # requires adafruit_seesaw/
@@ -106,7 +109,7 @@ VOLTAGE_RED     = 3.5
 VOLTAGE_GREEN   = 4.1
 
 # Battery settings
-VOLTAGE_PERIOD = 10.0 # in seconds
+VOLTAGE_PERIOD = 60.0 # in seconds
 
 # Key configuration data
 #
@@ -281,6 +284,15 @@ def get_voltage():
     value = voltage_pin.value
     # Calculate voltage
     voltage = (value * 3.3) / 65536 * 2
+    # Recording voltage?
+    if voltage_record:
+        # Get decivoltage as integer
+        voltage_deci = int(voltage * 10.0)
+        # Update NVM
+        if voltage_deci < microcontroller.nvm[0]:
+            microcontroller.nvm[0] = voltage_deci
+        if voltage_deci > microcontroller.nvm[1]:
+            microcontroller.nvm[1] = voltage_deci
     # Calculate voltage hue and percentage
     if voltage <= VOLTAGE_RED:
         voltage_hue = hue["red"]
@@ -299,9 +311,11 @@ def get_voltage():
     if ble.connected:
         battery_service.level = voltage_percent
     # Debug
-    print(f'value={value}, voltage={voltage}, voltage_percent={voltage_percent}, voltage_hue={voltage_hue}')
+    print(f'value={value}, voltage={voltage}, percent={voltage_percent}, hue={voltage_hue}, min={microcontroller.nvm[0]}, max={microcontroller.nvm[1]}, rec={voltage_record}')
     # Set timer
     return time.monotonic() + VOLTAGE_PERIOD
+
+print(f'len(microcontroller.nvm) = {len(microcontroller.nvm)}')
 
 # BLE disonnected pixel loops
 ble_not_advertising_pixels = [5, 6, 9, 10] # Inner 4
@@ -363,9 +377,24 @@ layout = KeyboardLayoutUS(keyboard)
 trellis.pixels[ble_advertising_pixels[8]] = (r, g, b)
 time.sleep(0.05)
 
-# Initial battery measurement
+# GPIO
+voltage_record = False
 voltage_pin = AnalogIn(board.VOLTAGE_MONITOR)
 voltage_timer = get_voltage()
+
+switch = DigitalInOut(board.SWITCH)
+switch.direction = Direction.INPUT
+switch.pull = Pull.UP
+switch_value = None
+
+red_led = DigitalInOut(board.RED_LED)
+red_led.direction = Direction.OUTPUT
+red_led.value = False
+
+blue_led = DigitalInOut(board.BLUE_LED)
+blue_led.direction = Direction.OUTPUT
+blue_led.value = False
+
 trellis.pixels[ble_advertising_pixels[9]] = (r, g, b)
 time.sleep(0.05)
 
@@ -443,6 +472,18 @@ while True:
             # Start advertising ?
             print(f'ble.start_advertising()')
             ble.start_advertising(advertisement, scan_response)
+
+    # Switch changed
+    if switch_value != switch.value:
+        switch_value = switch.value
+        print(f'switch.value = {switch_value}')
+        # Switch pressed
+        if switch_value == False:
+            # Start recording min and max voltages to nvm
+            microcontroller.nvm[0] = 0xFF
+            microcontroller.nvm[1] = 0x00
+            voltage_record = True
+            red_led.value = voltage_record
 
     # call the sync function call any triggered callbacks
     trellis.sync()
