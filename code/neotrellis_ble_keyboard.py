@@ -101,7 +101,7 @@ VAL_MAX   = (VAL_SPLIT * 32.0)
 VAL_STEP  = 0.00005
 
 # Voltage colors
-VOLTAGE_RED     = 3.2
+VOLTAGE_RED     = 3.5
 VOLTAGE_GREEN   = 4.2
 
 # Battery settings
