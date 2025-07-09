@@ -55,6 +55,7 @@ from adafruit_ble.advertising import Advertisement
 from adafruit_ble.advertising.standard import ProvideServicesAdvertisement
 from adafruit_ble.services.standard.hid import HIDService
 from adafruit_ble.services.standard.device_info import DeviceInfoService
+from adafruit_ble.services.standard import BatteryService
 
 from adafruit_hid.keyboard import Keyboard
 from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS
@@ -102,7 +103,7 @@ VAL_STEP  = 0.00005
 
 # Voltage colors
 VOLTAGE_RED     = 3.5
-VOLTAGE_GREEN   = 4.2
+VOLTAGE_GREEN   = 4.1
 
 # Battery settings
 VOLTAGE_PERIOD = 10.0 # in seconds
@@ -294,7 +295,10 @@ def get_voltage():
     r, g, b = hsv_to_rgb(voltage_hue, 1.0, 1.0)
     # Finally set the LED
     neopixel[0] = (r, g, b)
-    # Calculate coltage percentage
+    # Send via BLE
+    if ble.connected:
+        battery_service.level = voltage_percent
+    # Debug
     print(f'value={value}, voltage={voltage}, voltage_percent={voltage_percent}, voltage_hue={voltage_hue}')
     # Set timer
     return time.monotonic() + VOLTAGE_PERIOD
@@ -320,16 +324,11 @@ neopixel[0] = (255, 255, 255)
 trellis.pixels[ble_advertising_pixels[1]] = (r, g, b)
 time.sleep(0.05)
 
-# Initial battery measurement
-voltage_pin = AnalogIn(board.VOLTAGE_MONITOR)
-voltage_timer = get_voltage()
-trellis.pixels[ble_advertising_pixels[2]] = (r, g, b)
-time.sleep(0.05)
-
 # Setup the BLE keyboard and layout
 ble_connected = None
 hid = HIDService()
-trellis.pixels[ble_advertising_pixels[3]] = (r, g, b)
+battery_service = BatteryService()
+trellis.pixels[ble_advertising_pixels[2]] = (r, g, b)
 time.sleep(0.05)
 device_info = DeviceInfoService(
     manufacturer="Adafruit",
@@ -338,29 +337,35 @@ device_info = DeviceInfoService(
     serial_number="20250704",
     firmware_revision="0.0.5",
     hardware_revision="0.0.1")
-trellis.pixels[ble_advertising_pixels[4]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[3]] = (r, g, b)
 time.sleep(0.05)
 advertisement = ProvideServicesAdvertisement(hid)
 # Advertise as "Keyboard" (0x03C1) icon when pairing
 # https://www.bluetooth.com/specifications/assigned-numbers/
 advertisement.appearance = 961
-trellis.pixels[ble_advertising_pixels[5]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[4]] = (r, g, b)
 time.sleep(0.05)
 scan_response = Advertisement()
 scan_response.shortname = "NeoTrellisSN"
 scan_response.complete_name = "NeoTrellisCN"
-trellis.pixels[ble_advertising_pixels[6]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[5]] = (r, g, b)
 time.sleep(0.05)
 ble = adafruit_ble.BLERadio()
 print(f'init: ble.connected={ble.connected}, ble.advertising={ble.advertising}')
 ble.stop_advertising()
 ble.name = "NeoTrellisN"
-trellis.pixels[ble_advertising_pixels[7]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[6]] = (r, g, b)
 time.sleep(0.05)
 keyboard = Keyboard(hid.devices)
-trellis.pixels[ble_advertising_pixels[8]] = (r, g, b)
+trellis.pixels[ble_advertising_pixels[7]] = (r, g, b)
 time.sleep(0.05)
 layout = KeyboardLayoutUS(keyboard)
+trellis.pixels[ble_advertising_pixels[8]] = (r, g, b)
+time.sleep(0.05)
+
+# Initial battery measurement
+voltage_pin = AnalogIn(board.VOLTAGE_MONITOR)
+voltage_timer = get_voltage()
 trellis.pixels[ble_advertising_pixels[9]] = (r, g, b)
 time.sleep(0.05)
 
