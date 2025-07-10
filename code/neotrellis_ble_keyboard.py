@@ -479,11 +479,13 @@ while True:
         print(f'switch.value = {switch_value}')
         # Switch pressed
         if switch_value == False:
-            # Start recording min and max voltages to nvm
-            microcontroller.nvm[0] = 0xFF
-            microcontroller.nvm[1] = 0x00
-            voltage_record = True
-            red_led.value = voltage_record
+            # Not already recording voltages?
+            if not voltage_record:
+                # Start recording min and max voltages to nvm
+                microcontroller.nvm[0] = 0xFF
+                microcontroller.nvm[1] = 0x00
+                voltage_record = True
+                red_led.value = voltage_record
 
     # call the sync function call any triggered callbacks
     trellis.sync()
